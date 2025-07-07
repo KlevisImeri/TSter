@@ -1,8 +1,23 @@
 {
   "name": "tster",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A TypeScript simple REST API tester script.",
   "type": "module",
+  "main": "./dist/TSter.js",
+  "types": "./dist/TSter.d.ts",
+    "exports": {
+    ".": {
+      "import": "./dist/TSter.js",
+      "types": "./dist/TSter.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/KlevisImeri/TSter.git"

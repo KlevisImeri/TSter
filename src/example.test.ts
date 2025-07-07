@@ -1,4 +1,4 @@
-import { TSter, type TestSuite} from "./TSter";
+import { TSter, type TestSuite } from "./TSter";
 
 
 const suite: TestSuite = {
