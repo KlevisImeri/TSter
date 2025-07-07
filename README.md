@@ -1,6 +1,7 @@
 # TSter
 A TypeScript simple REST API tester script.
 
+#### Example
 ```ts
 import { TSter, type TestSuite} from "./TSter";
 
@@ -51,5 +52,6 @@ const suite: TestSuite = {
 
 await TSter(suite);
 ```
-Example Output:
+#### Example Output
+
 ![Example Output](image.png)
