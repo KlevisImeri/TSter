@@ -88,7 +88,7 @@ export async function TSter(suite: TestSuite) {
           console.log(`  Method: ${testCase.method}`);
           console.log(`  URL: ${fullUrl}`);
           if (testCase.status) {
-            console.log(`  Status: ${colors.strike(testCase.status)} -> ${colors.red(response.status)}`);
+            console.log(`  Status: ${colors.strike(`${testCase.status}`)} -> ${colors.red(`${response.status}`)}`);
           } else {
             console.log(`  Status: ${response.status}`);
           }
