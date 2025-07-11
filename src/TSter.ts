@@ -1,4 +1,4 @@
-type TestCase = {
+export type TestCase = {
   name: string;
   method: "GET" | "POST" | "PUT" | "DELETE" | "OPTIONS";
   url?: string;
@@ -7,7 +7,7 @@ type TestCase = {
   body?: unknown;
 };
 
-type TestSet = {
+export type TestSet = {
   name: string;
   url?: string;
   testCases: TestCase[];
