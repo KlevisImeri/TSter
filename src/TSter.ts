@@ -65,10 +65,10 @@ export async function TSter(suite: TestSuite) {
         const passed = response.ok && result.includes(testCase.expected); 
         const testLine = [
           `  [${passed ? '✓' : '✗'}]`,
-          testCase.name.padEnd(17),
-          testCase.method.padEnd(4),
-          (testCase.url || '').padEnd(20),
-          `[${duration.toString().padStart(4)}ms]`
+          testCase.name.padEnd(0),
+          testCase.method.padEnd(0),
+          (testCase.url || '').padEnd(0),
+          `[${duration.toString().padStart(0)}ms]`
         ].join(' ');
 
         if (passed) {
