@@ -2,9 +2,10 @@ export type TestCase = {
   name: string;
   method: "GET" | "POST" | "PUT" | "DELETE" | "OPTIONS";
   url?: string;
-  expected: string;
   headers?: Record<string, string>;
   body?: unknown;
+  expected: string;
+  status?: number;
 };
 
 export type TestSet = {
@@ -29,10 +30,11 @@ const colors = {
   green: (text: string) => `\x1b[32m${text}\x1b[0m`,
   red: (text: string) => `\x1b[31m${text}\x1b[0m`,
   bold: (text: string) => `\x1b[1m${text}\x1b[0m`,
+  strike: (text: string) => `\x1b[9m${text}\x1b[0m`,
 };
 
 export async function TSter(suite: TestSuite) {
-  console.log(colors.bold('TSter v1.0'));
+  console.log(colors.bold('TSter v1.1'));
   console.log(`Suite: ${suite.name}`);
   console.log(`Base URL: ${suite.url}\n`);
   
@@ -40,11 +42,8 @@ export async function TSter(suite: TestSuite) {
   let failedTests = 0;
   
   for (const testSet of suite.testSets) {
-    let suiteUrl = suite.url;
-    if (suiteUrl.endsWith('/')) {
-      suiteUrl = suiteUrl.slice(0, -1);
-    }
-    const baseUrl = suite.url + normalizeUrl(testSet.url || '');
+    const normalizeSuiteUrl = suite.url.endsWith('/') ? suite.url.slice(0, -1) : suite.url;
+    const baseUrl = normalizeSuiteUrl + normalizeUrl(testSet.url || '');
     
     console.log(colors.bold(`\n[${testSet.name}: ${testSet.url || ''}]`));
     
@@ -62,7 +61,12 @@ export async function TSter(suite: TestSuite) {
         const result = await response.text();
         const duration = Date.now() - testStart;
 
-        const passed = response.ok && result.includes(testCase.expected); 
+        const statusPassed = testCase.status 
+          ? response.status === testCase.status 
+          : response.ok;
+        const bodyPassed = result.includes(testCase.expected);
+        const passed = statusPassed && bodyPassed; 
+
         const nameColumnWidth = 30;
         const displayName = testCase.name.length > nameColumnWidth
           ? testCase.name.substring(0, nameColumnWidth - 3) + '...'
@@ -83,10 +87,14 @@ export async function TSter(suite: TestSuite) {
           console.log(colors.red(testLine));
           console.log(`  Method: ${testCase.method}`);
           console.log(`  URL: ${fullUrl}`);
-          console.log(`  Status: ${response.status}`);
+          if (testCase.status) {
+            console.log(`  Status: ${colors.strike(testCase.status)} -> ${colors.red(response.status)}`);
+          } else {
+            console.log(`  Status: ${response.status}`);
+          }
           console.log(`  Expected: "${testCase.expected}"`);
-          console.log(`  Response: ${result}`);;
-        }
+          console.log("  Response:", JSON.stringify(result, null, 2).replace(/\\"/g, '"').replace(/\\n/g, '\n  ') ?? result);
+         }
       } catch (error: unknown) {
         failedTests++;
         const errorMessage = error instanceof Error ? error.message : "An unidentified error occurred!";

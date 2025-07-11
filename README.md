@@ -16,9 +16,9 @@ const testPosts: TestSet = {
   },{
     name: "Create New Post",
     method: "POST",
-    expected: "id",
     headers: { "Content-Type": "application/json" },
-    body: { title: "Test Post", body: "Content", userId: 1 }
+    body: { title: "Test Post", body: "Content", userId: 1 },
+    expected: "id"
   }]
 };
 
@@ -29,6 +29,7 @@ const testUsers: TestSet = {
     name: "Get User by ID where id is large so it should fail",
     method: "GET",
     url: "/100000",
+    status: 200,
     expected: "username"
   },{
     name: "Search User",
@@ -49,23 +50,23 @@ await TSter(suite);
 ```
 ```
 $ bun src/example.test.ts 
-TSter v1.0
+TSter v1.1
 Suite: Example TestSuite
 Base URL: https://jsonplaceholder.typicode.com
 
 
 [Posts Tests: /posts]
-  [✓] Get Single Post                 |  GET /1 [61ms]
-  [✓] Create New Post                 |  POST  [454ms]
+  [✓] Get Single Post                 |  GET /1 [65ms]
+  [✓] Create New Post                 |  POST  [418ms]
 
 [Users Tests: /users]
-  [✗] Get User by ID where id is ...  |  GET /100000 [19ms]
+  [✗] Get User by ID where id is ...  |  GET /100000 [20ms]
   Method: GET
   URL: https://jsonplaceholder.typicode.com/users/100000
-  Status: 404
+  Status: 200 -> 404
   Expected: "username"
-  Response: {}
-  [✓] Search User                     |  GET /?username=Bret [18ms]
+  Response: "{}"
+  [✓] Search User                     |  GET /?username=Bret [20ms]
 
 Total Tests: 4
 Passed: 3

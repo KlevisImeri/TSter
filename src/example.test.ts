@@ -11,9 +11,9 @@ const testPosts: TestSet = {
   },{
     name: "Create New Post",
     method: "POST",
-    expected: "id",
     headers: { "Content-Type": "application/json" },
-    body: { title: "Test Post", body: "Content", userId: 1 }
+    body: { title: "Test Post", body: "Content", userId: 1 },
+    expected: "id"
   }]
 };
 
@@ -24,6 +24,7 @@ const testUsers: TestSet = {
     name: "Get User by ID where id is large so it should fail",
     method: "GET",
     url: "/100000",
+    status: 200,
     expected: "username"
   },{
     name: "Search User",
