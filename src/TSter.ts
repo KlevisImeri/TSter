@@ -63,14 +63,19 @@ export async function TSter(suite: TestSuite) {
         const duration = Date.now() - testStart;
 
         const passed = response.ok && result.includes(testCase.expected); 
+        const nameColumnWidth = 30;
+        const displayName = testCase.name.length > nameColumnWidth
+          ? testCase.name.substring(0, nameColumnWidth - 3) + '...'
+          : testCase.name;
+
         const testLine = [
           `  [${passed ? '✓' : '✗'}]`,
-          testCase.name.padEnd(0),
+          displayName.padEnd(nameColumnWidth),
+          ' | ',
           testCase.method.padEnd(0),
           (testCase.url || '').padEnd(0),
           `[${duration.toString().padStart(0)}ms]`
         ].join(' ');
-
         if (passed) {
           console.log(colors.green(testLine));
         } else {
