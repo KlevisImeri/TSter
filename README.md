@@ -47,6 +47,7 @@ const suite: TestSuite = {
 
 await TSter(suite);
 ```
+```
 $ bun src/example.test.ts 
 TSter v1.0
 Suite: Example TestSuite
@@ -70,4 +71,5 @@ Total Tests: 4
 Passed: 3
 Failed: 1
 ```
+
 ![](assets/output.png)
