@@ -1,6 +1,3 @@
-import boxen from "boxen";
-import chalk from "chalk";
-
 type TestCase = {
   name: string;
   method: "GET" | "POST" | "PUT" | "DELETE" | "OPTIONS";
@@ -23,22 +20,21 @@ export type TestSuite = {
 };
 
 function normalizeUrl(url: string): string {
-  if (url.endsWith('/')) {
-    url = url.slice(0, -1);
-  }
-  if (url && !url.startsWith('/')) {
-    url = '/' + url;
-  }
+  if (url.endsWith('/')) url = url.slice(0, -1);
+  if (url && !url.startsWith('/')) url = '/' + url;
   return url;
 }
 
+const colors = {
+  green: (text: string) => `\x1b[32m${text}\x1b[0m`,
+  red: (text: string) => `\x1b[31m${text}\x1b[0m`,
+  bold: (text: string) => `\x1b[1m${text}\x1b[0m`,
+};
+
 export async function TSter(suite: TestSuite) {
-  console.log(boxen(chalk.bold('🚀 TSter v1.0'), {
-    padding: 1,
-    borderColor: 'blue'
-  }));
-  console.log(chalk.gray(`📦 Suite: ${suite.name}`));
-  console.log(chalk.gray(`🌐 Base URL: ${suite.url}\n`));
+  console.log(colors.bold('TSter v1.0'));
+  console.log(`Suite: ${suite.name}`);
+  console.log(`Base URL: ${suite.url}\n`);
   
   let totalTests = 0;
   let failedTests = 0;
@@ -48,88 +44,53 @@ export async function TSter(suite: TestSuite) {
     if (suiteUrl.endsWith('/')) {
       suiteUrl = suiteUrl.slice(0, -1);
     }
+    const baseUrl = suite.url + normalizeUrl(testSet.url || '');
     
-    let testSetUrl = testSet.url || '';
-    testSetUrl = normalizeUrl(testSetUrl);
-    
-    const baseUrl = suiteUrl + testSetUrl;
-   
-    console.log(chalk.gray.bold(`\n🧪 ${testSet.name}: ${testSet.url || ''}`));
-    console.log(chalk.gray('---------------------------------------'));
+    console.log(colors.bold(`\n[${testSet.name}: ${testSet.url || ''}]`));
     
     for (const testCase of testSet.testCases) {
       totalTests++;
-      
-      let testCaseUrl = testCase.url || '';
-      testCaseUrl = normalizeUrl(testCaseUrl);
-      
-      const fullUrl = baseUrl + testCaseUrl;
+      const fullUrl = baseUrl + normalizeUrl(testCase.url || '');
       
       try {
+        const testStart = Date.now();
         const response = await fetch(fullUrl, {
           method: testCase.method,
           headers: testCase.headers,
           body: testCase.body ? JSON.stringify(testCase.body) : undefined
-        });
-        
+        }); 
         const result = await response.text();
-        const passed = response.ok && result.includes(testCase.expected);
-       
+        const duration = Date.now() - testStart;
+
+        const passed = response.ok && result.includes(testCase.expected); 
+        const testLine = [
+          `  [${passed ? '✓' : '✗'}]`,
+          testCase.name.padEnd(17),
+          testCase.method.padEnd(4),
+          (testCase.url || '').padEnd(20),
+          `[${duration.toString().padStart(4)}ms]`
+        ].join(' ');
+
         if (passed) {
-          console.log(chalk.green(`  ✓ ${testCase.name}:\t${testCase.url || ''}`));
+          console.log(colors.green(testLine));
         } else {
           failedTests++;
-          const failureText = [
-              `Method: ${testCase.method}`,
-              `URL: ${fullUrl}`,
-              `Status: ${response.status}`,
-              `Expected: "${testCase.expected}"`,
-              `Response: ${result.length > 150 ? result.slice(0, 150) + "..." : result}`
-          ].join("\n");
-          console.log(boxen(failureText, {
-            title: `❌ ${testCase.name}`,
-            titleAlignment: 'center',
-            borderColor: 'red',
-            padding: 1
-          }));
+          console.log(colors.red(testLine));
+          console.log(`  Method: ${testCase.method}`);
+          console.log(`  URL: ${fullUrl}`);
+          console.log(`  Status: ${response.status}`);
+          console.log(`  Expected: "${testCase.expected}"`);
+          console.log(`  Response: ${result}`);;
         }
       } catch (error: unknown) {
-        let errorMessage = "An unidentified error occurred!";
-        if (error instanceof Error) {
-          errorMessage = error.message;
-        }
         failedTests++;
-        const errorText = [
-          `Method: ${testCase.method}`,
-          `URL: ${fullUrl}`,
-          `Error: ${errorMessage}`
-        ].join("\n");
-        console.log(boxen(errorText, {
-            title: `💥 ${testCase.name}`,
-            titleAlignment: 'center',
-            borderColor: 'red',
-            padding: 1
-          }));
+        const errorMessage = error instanceof Error ? error.message : "An unidentified error occurred!";
+        console.log(colors.red(`  [ERROR] ${errorMessage}`));
       }
     }
   }
-  
-  const summaryTitle = failedTests > 0
-    ? chalk.gray.bold("Some tests failed")
-    : chalk.gray.bold("All tests passed");
-   
-  const summaryText = [
-    `Total Tests: ${totalTests}`,
-    chalk.green(`Passed: ${totalTests - failedTests}`),
-    chalk.red(`Failed: ${failedTests}`)
-  ].join("\n");
-  
-  console.log(boxen(summaryText, {
-    title: summaryTitle,
-    titleAlignment: 'center',
-    margin: {top: 2},
-    padding: 1,
-    borderStyle: 'double',
-    borderColor: failedTests > 0 ? 'red' : 'gray'
-  }));
+
+  console.log(`\nTotal Tests: ${totalTests}`);
+  console.log(colors.green(`Passed: ${totalTests - failedTests}`));
+  console.log(colors.red(`Failed: ${failedTests}`));
 }

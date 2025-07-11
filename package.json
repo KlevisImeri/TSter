@@ -1,36 +1,36 @@
 {
   "name": "tster",
-  "version": "1.0.5",
-  "description": "A TypeScript simple REST API tester script.",
-  "type": "module",
+  "version": "1.0.7",
+  "author": "Klevis Imeri",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KlevisImeri/TSter.git"
+  },
   "main": "./dist/TSter.js",
-  "types": "./dist/TSter.d.ts",
-    "exports": {
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.0.0"
+  },
+  "exports": {
     ".": {
       "import": "./dist/TSter.js",
       "types": "./dist/TSter.d.ts"
     },
     "./package.json": "./package.json"
   },
+  "description": "A TypeScript simple, no-bloat REST API tester script",
   "files": [
     "dist"
   ],
+  "keywords": [
+    "ts", "typescript", "api", 
+    "rest", "test", "cli", 
+    "nobloat", "tiny", "zero dependencies"
+  ],
+  "license": "MIT",
   "scripts": {
     "build": "tsc"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/KlevisImeri/TSter.git"
-  },
-  "devDependencies": {
-    "@types/bun": "latest",
-    "typescript": "^5.0.0"
-  },
-  "keywords": ["ts", "typescript", "api", "rest", "test", "cli"],
-  "author": "Klevis Imeri",
-  "license": "MIT",
-  "dependencies": {
-    "boxen": "^8.0.1",
-    "chalk": "^5.4.1"
-  }
+  "type": "module",
+  "types": "./dist/TSter.d.ts"
 }

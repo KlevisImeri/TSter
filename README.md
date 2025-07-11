@@ -1,5 +1,5 @@
 # TSter
-A TypeScript simple REST API tester script.
+A TypeScript simple, no-bloat REST API tester script.
 
 #### Example
 ```ts
@@ -52,6 +52,28 @@ const suite: TestSuite = {
 
 await TSter(suite);
 ```
-#### Example Output
+```
+$ bun src/example.test.ts 
+TSter v1.0
+Suite: Example TestSuite
+Base URL: https://jsonplaceholder.typicode.com
 
-![Example Output](image.png)
+
+[Posts Tests: /posts]
+  [✓] Get Single Post   GET  /1                   [  63ms]
+  [✓] Create New Post   POST                      [ 387ms]
+
+[Users Tests: /users]
+  [✗] Get User by ID    GET  /100000              [  19ms]
+  Method: GET
+  URL: https://jsonplaceholder.typicode.com/users/100000
+  Status: 404
+  Expected: "username"
+  Response: {}
+  [✓] Search Users      GET  /?username=Bret      [  20ms]
+
+Total Tests: 4
+Passed: 3
+Failed: 1
+```
+![](output.png)
