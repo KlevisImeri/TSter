@@ -4,7 +4,7 @@ export type TestCase = {
   url?: string;
   headers?: Record<string, string>;
   body?: unknown;
-  expected: string;
+  expected: JsonValue;
   status?: number;
 };
 
@@ -20,6 +20,11 @@ export type TestSuite = {
   testSets: TestSet[];
 };
 
+type JsonPrimitive = string | number | boolean | null;
+type JsonObject = { [key: string]: JsonValue; };
+type JsonArray = JsonValue[];
+export type JsonValue = JsonPrimitive | JsonObject | JsonArray;
+
 function normalizeUrl(url: string): string {
   if (url.endsWith('/')) url = url.slice(0, -1);
   if (url && !url.startsWith('/')) url = '/' + url;
@@ -33,8 +38,24 @@ const colors = {
   strike: (text: string) => `\x1b[9m${text}\x1b[0m`,
 };
 
+function matchJson(pattern: JsonValue, target: JsonValue): boolean {
+  if (typeof pattern !== 'object' || pattern === null) return pattern === target;
+  if (typeof target !== 'object' || target === null) return false;
+  if (Array.isArray(pattern)) {
+    if (!Array.isArray(target) || pattern.length !== target.length) return false;
+    return pattern.every((elem, index) => matchJson(elem, target[index]!));
+  }
+  if (Array.isArray(target)) return false;
+  const patternKeys = Object.keys(pattern);
+  for (const key of patternKeys) {
+    if (!target.hasOwnProperty(key) ||
+        !matchJson(pattern[key]!, target[key]!)) return false;
+  }
+  return true;
+}
+
 export async function TSter(suite: TestSuite) {
-  console.log(colors.bold('TSter v1.1'));
+  console.log(colors.bold('TSter v1.2'));
   console.log(`Suite: ${suite.name}`);
   console.log(`Base URL: ${suite.url}\n`);
   
@@ -58,13 +79,17 @@ export async function TSter(suite: TestSuite) {
           headers: testCase.headers,
           body: testCase.body ? JSON.stringify(testCase.body) : undefined
         }); 
-        const result = await response.text();
         const duration = Date.now() - testStart;
+
+        const itsStr = typeof testCase.expected === 'string';
+        let body: JsonValue = await (itsStr ? response.text(): response.json()) as JsonValue;
 
         const statusPassed = testCase.status 
           ? response.status === testCase.status 
           : response.ok;
-        const bodyPassed = result.includes(testCase.expected);
+        const bodyPassed = itsStr 
+          ? (body as string).includes(testCase.expected as string)
+          : matchJson(testCase.expected, body);
         const passed = statusPassed && bodyPassed; 
 
         const nameColumnWidth = 30;
@@ -87,13 +112,14 @@ export async function TSter(suite: TestSuite) {
           console.log(colors.red(testLine));
           console.log(`  Method: ${testCase.method}`);
           console.log(`  URL: ${fullUrl}`);
-          if (testCase.status) {
-            console.log(`  Status: ${colors.strike(`${testCase.status}`)} -> ${colors.red(`${response.status}`)}`);
-          } else {
-            console.log(`  Status: ${response.status}`);
+          if (testCase.status && testCase.status != response.status) {
+              console.log(`  Status: ${colors.strike(`${testCase.status}`)} -> ${colors.red(`${response.status}`)}`);
           }
-          console.log(`  Expected: "${testCase.expected}"`);
-          console.log("  Response:", JSON.stringify(result, null, 2).replace(/\\"/g, '"').replace(/\\n/g, '\n  ') ?? result);
+          else {
+              console.log(`  Status: ${response.status}`);
+          }
+          console.log(`  Expected: ${itsStr ? testCase.expected : (JSON.stringify(testCase.expected) || "").replace(/^/gm, '  ')}`);
+          console.log(`  Response: ${itsStr ? body : (JSON.stringify(body) || "").replace(/^/gm, '  ')}`);
          }
       } catch (error: unknown) {
         failedTests++;

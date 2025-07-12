@@ -12,13 +12,14 @@ const testPosts: TestSet = {
     name: "Get Single Post",
     method: "GET",
     url: "/1",
-    expected: "id"
+    expected: { id: 1 }
   },{
     name: "Create New Post",
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: { title: "Test Post", body: "Content", userId: 1 },
-    expected: "id"
+    status: 201,
+    expected: { title: "Test Post" }
   }]
 };
 
