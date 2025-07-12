@@ -108,7 +108,6 @@ export async function TSter(suite: TestSuite) {
         if (passed) {
           console.log(colors.green(testLine));
         } else {
-          failedTests++;
           console.log(colors.red(testLine));
           console.log(`  Method: ${testCase.method}`);
           console.log(`  URL: ${fullUrl}`);
@@ -118,9 +117,10 @@ export async function TSter(suite: TestSuite) {
           else {
               console.log(`  Status: ${response.status}`);
           }
-          console.log(`  Expected: ${itsStr ? testCase.expected : (JSON.stringify(testCase.expected) || "").replace(/^/gm, '  ')}`);
-          console.log(`  Response: ${itsStr ? body : (JSON.stringify(body) || "").replace(/^/gm, '  ')}`);
-         }
+          console.log(`  Expected: ${(JSON.stringify(testCase.expected, null, 2) || "").replace(/^/gm, '  ').slice(2)}`);
+          console.log(`  Response: ${(JSON.stringify( itsStr ? JSON.parse(body) : body, null, 2) || "").replace(/^/gm,'  ').slice(2)}`);
+        }
+        failedTests++;
       } catch (error: unknown) {
         failedTests++;
         const errorMessage = error instanceof Error ? error.message : "An unidentified error occurred!";
