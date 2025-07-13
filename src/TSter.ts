@@ -4,7 +4,7 @@ export type TestCase = {
   url?: string;
   headers?: Record<string, string>;
   body?: unknown;
-  expected: JsonValue;
+  expected?: JsonValue;
   status?: number;
 };
 
@@ -26,7 +26,7 @@ type JsonArray = JsonValue[];
 export type JsonValue = JsonPrimitive | JsonObject | JsonArray;
 
 function normalizeUrl(url: string): string {
-  if (url.endsWith('/')) url = url.slice(0, -1);
+  if (url.endsWith('/')) url = url.slice(1, -1);
   if (url && !url.startsWith('/')) url = '/' + url;
   return url;
 }
@@ -54,8 +54,13 @@ function matchJson(pattern: JsonValue, target: JsonValue): boolean {
   return true;
 }
 
+function safeJsonParse(str: string | null| undefined): JsonValue {
+  if(str === null || str === undefined) return "";
+  try { return JSON.parse(str); } catch (e) { return str; }
+}
+
 export async function TSter(suite: TestSuite) {
-  console.log(colors.bold('TSter v1.2'));
+  console.log(colors.bold('TSter v2.2'));
   console.log(`Suite: ${suite.name}`);
   console.log(`Base URL: ${suite.url}\n`);
   
@@ -63,7 +68,7 @@ export async function TSter(suite: TestSuite) {
   let failedTests = 0;
   
   for (const testSet of suite.testSets) {
-    const normalizeSuiteUrl = suite.url.endsWith('/') ? suite.url.slice(0, -1) : suite.url;
+    const normalizeSuiteUrl = suite.url.endsWith('/') ? suite.url.slice(1, -1) : suite.url;
     const baseUrl = normalizeSuiteUrl + normalizeUrl(testSet.url || '');
     
     console.log(colors.bold(`\n[${testSet.name}: ${testSet.url || ''}]`));
@@ -81,18 +86,19 @@ export async function TSter(suite: TestSuite) {
         }); 
         const duration = Date.now() - testStart;
 
-        const itsStr = typeof testCase.expected === 'string';
-        let body: JsonValue = await (itsStr ? response.text(): response.json()) as JsonValue;
+        const isStr = typeof testCase.expected === 'string' || testCase.expected === null || testCase.expected === undefined;
+        if(isStr) testCase.expected = safeJsonParse(testCase.expected as string);
+        const body = safeJsonParse(await response.text())
 
         const statusPassed = testCase.status 
           ? response.status === testCase.status 
           : response.ok;
-        const bodyPassed = itsStr 
-          ? (body as string).includes(testCase.expected as string)
-          : matchJson(testCase.expected, body);
+        const bodyPassed = isStr 
+          ? JSON.stringify(body).includes(testCase.expected as string)
+          : matchJson(testCase.expected as JsonValue, body);
         const passed = statusPassed && bodyPassed; 
 
-        const nameColumnWidth = 30;
+        const nameColumnWidth = 31;
         const displayName = testCase.name.length > nameColumnWidth
           ? testCase.name.substring(0, nameColumnWidth - 3) + '...'
           : testCase.name;
@@ -101,9 +107,9 @@ export async function TSter(suite: TestSuite) {
           `  [${passed ? '✓' : '✗'}]`,
           displayName.padEnd(nameColumnWidth),
           ' | ',
-          testCase.method.padEnd(0),
-          (testCase.url || '').padEnd(0),
-          `[${duration.toString().padStart(0)}ms]`
+          testCase.method.padEnd(1),
+          (testCase.url || '').padEnd(1),
+          `[${duration.toString().padStart(1)}ms]`
         ].join(' ');
         if (passed) {
           console.log(colors.green(testLine));
@@ -118,9 +124,9 @@ export async function TSter(suite: TestSuite) {
               console.log(`  Status: ${response.status}`);
           }
           console.log(`  Expected: ${(JSON.stringify(testCase.expected, null, 2) || "").replace(/^/gm, '  ').slice(2)}`);
-          console.log(`  Response: ${(JSON.stringify( itsStr ? JSON.parse(body) : body, null, 2) || "").replace(/^/gm,'  ').slice(2)}`);
+          console.log(`  Response: ${(JSON.stringify(body, null, 2) || "").replace(/^/gm,'  ').slice(2)}`);
+          failedTests++;
         }
-        failedTests++;
       } catch (error: unknown) {
         failedTests++;
         const errorMessage = error instanceof Error ? error.message : "An unidentified error occurred!";
